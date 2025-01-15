@@ -1,5 +1,7 @@
+from typing import List
 from funcnodes_span.peaks import PeakProperties
 import numpy as np
+import funcnodes as fn
 
 
 def molar_mass_value_round(val):
@@ -23,10 +25,11 @@ def molarMass_summation_series(Mass, Signal, Sigma):
     return Mn, Mw
 
 
-def sec_peak_analysis(data: dict, peaks: PeakProperties):
+def sec_peak_analysis(data: dict, peaks: List[PeakProperties]) -> List[PeakProperties]:
     signal = data["signal"]
     mass = data["mass"]
     sigma = data["sigma"]
+    peak_report = []
     if peaks:
         for peak in peaks:
             peak_left = peak.i_index
@@ -40,23 +43,28 @@ def sec_peak_analysis(data: dict, peaks: PeakProperties):
             peak.add_serializable_property("Mn (g/mol)", molar_mass_value_round(mn))
             peak.add_serializable_property("Mw (g/mol)", molar_mass_value_round(mw))
             peak.add_serializable_property("D", round(mw / mn, 2))
+            peak_report.append(peak)
+
+    return peak_report
 
 
-# hplc_report_node = fn.NodeDecorator(
-#     node_id="fnhplc.report.hplc_report",
-#     name="HPLC Report",
-#     description="Calculates HPLC report data from peaks and fitted peaks.",
-#     outputs=[
-#         {"name": "rundata"},
-#         {"name": "peakdata"},
-#         {"name": "signaldata"},
-#     ],
-# )(hplc_report)
-# REPORT_SHELF = fn.Shelf(
-#     nodes=[
-#         hplc_report_node,
-#     ],
-#     subshelves=[],
-#     name="HPLC Report",
-#     description="HPLC Report Nodes",
-# )
+sec_report_node = fn.NodeDecorator(
+    node_id="fnsec.report.sec_report",
+    name="sec Report",
+    inputs=[
+        {"name": "data", "dtype": "dict"},
+        {"name": "peaks", "dtype": "PeakProperties"},
+    ],
+    description="Calculates sec report data from peaks and sec data.",
+    outputs=[
+        {"name": "peaks_sec", "dtype": "PeakProperties"},
+    ],
+)(sec_peak_analysis)
+REPORT_SHELF = fn.Shelf(
+    nodes=[
+        sec_report_node,
+    ],
+    subshelves=[],
+    name="sec Report",
+    description="sec Report Nodes",
+)
