@@ -11,11 +11,12 @@ sys.path.append(
 from all_nodes_test_base import TestAllNodesBase  # noqa: E402
 from tests import (  # noqa: E402
     test_data,
+    test_report,
 )
 
 sub_test_classes = []
 
-for mod in (test_data,):
+for mod in (test_data, test_report):
     for cls in mod.__dict__.values():
         if isinstance(cls, type) and issubclass(cls, unittest.IsolatedAsyncioTestCase):
             sub_test_classes.append(cls)
