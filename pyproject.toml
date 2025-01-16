@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "funcnodes-sec"
-version = "0.1.2"
+version = "0.1.3"
 description = ""
 authors = ["Kourosh Rezaei <kourosh.rezaei@linkdlab.de>"]
 readme = "README.md"
