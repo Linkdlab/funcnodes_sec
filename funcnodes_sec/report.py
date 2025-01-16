@@ -36,10 +36,10 @@ def sec_peak_analysis(
             peak.to_dict()
             output_peak["Peak #"] = peak.id
             output_peak["Retention"] = peak.x_at_index
-            output_peak["Area"] = peak.area
+            # output_peak["Area"] = peak.area
             output_peak["Height"] = peak.y_at_index
-            output_peak["Symmetricity"] = peak.symmetricity
-            output_peak["FWHM"] = peak.fwhm
+            # output_peak["Symmetricity"] = peak.symmetricity
+            # output_peak["FWHM"] = peak.fwhm
 
             peak_left = peak.i_index
             peak_right = peak.f_index
