@@ -31,5 +31,5 @@ class TestSECData(unittest.IsolatedAsyncioTestCase):
         sec.inputs["molarmass_max"].value = 1000000
         self.assertIsInstance(sec, fn.Node)
         await sec
-        out = sec.outputs["out"].value
-        self.assertEqual(len(out["signal"]), 663)
+        signal = sec.outputs["signal"].value
+        self.assertEqual(len(signal), 663)

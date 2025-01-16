@@ -32,12 +32,16 @@ class TestSECReport(unittest.IsolatedAsyncioTestCase):
         sec.inputs["molarmass_max"].value = 1000000
         self.assertIsInstance(sec, fn.Node)
         await sec
-        out = sec.outputs["out"].value
-        self.assertEqual(len(out["signal"]), 663)
+        signal = sec.outputs["signal"].value
+        volume = sec.outputs["volume"].value
+        mass = sec.outputs["mass"].value
+        sigma = sec.outputs["sigma"].value
+
+        self.assertEqual(len(signal), 663)
 
         peaks: fn.Node = peak_finder()
-        peaks.inputs["y"].value = out["signal"]
-        peaks.inputs["x"].value = out["volume"]
+        peaks.inputs["y"].value = signal
+        peaks.inputs["x"].value = volume
         peaks.inputs["height"].value = 0.0299
         self.assertIsInstance(peaks, fn.Node)
         await peaks
@@ -46,12 +50,22 @@ class TestSECReport(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(main_peak[0], PeakProperties)
 
         sec_report: fn.Node = fnmodule.report.sec_report_node()
-
-        sec_report.inputs["data"].value = out
+        sec_report.inputs["signal"].value = signal
+        sec_report.inputs["mass"].value = mass
+        sec_report.inputs["sigma"].value = sigma
         sec_report.inputs["peaks"].value = main_peak
         self.assertIsInstance(sec_report, fn.Node)
         await sec_report
-        report = sec_report.outputs["peaks_sec"].value[0]
+        print(sec_report.outputs["sec_report"].value)
+
+        report = sec_report.outputs["sec_report"].value
+        peaks_sec = sec_report.outputs["sec_peaks"].value[0]
         self.assertEqual(
-            list(report._serdata.keys()), ["Mn (g/mol)", "Mw (g/mol)", "D"]
+            [list(report.keys())[-3], list(report.keys())[-2], list(report.keys())[-1]],
+            ["Mn (g/mol)", "Mw (g/mol)", "D"],
+        )
+        self.assertIsInstance(peaks_sec, PeakProperties)
+        self.assertEqual(
+            list(peaks_sec._serdata.keys()),
+            ["area", "symmetricity", "Mn (g/mol)", "Mw (g/mol)", "D"],
         )
