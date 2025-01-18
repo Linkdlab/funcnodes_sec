@@ -107,11 +107,12 @@ def read_sec_from_bytes(data: bytes) -> Tuple[dict, pd.DataFrame]:
         {"name": "sigma", "dtype": "np.ndarray"},
         {"name": "volume", "dtype": "np.ndarray"},
         {"name": "time", "dtype": "np.ndarray"},
+        {"name": "df"},
     ],
 )
 def retrieve_data(
     data: dict, metadata: pd.DataFrame, molarmass_min: int, molarmass_max: int
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.DataFrame]:
     # fitting_degree = int(metadata["Fit"][0].strip().split(" ")[-1])
     # fitting = metadata["Fit"][0].strip().split(" ")[0]
     const = float(metadata["Const."][0].strip())
@@ -167,7 +168,17 @@ def retrieve_data(
     SelectedVolume = volume[minIndex:maxIndex]
     SelectedTime = measurement_time[minIndex:maxIndex]
 
-    return SelectedSignal, SelectedMass, SelectedSigma, SelectedVolume, SelectedTime
+    df = pd.DataFrame(
+        {
+            "Signal": SelectedSignal,
+            "Mass": SelectedMass,
+            "Sigma": SelectedSigma,
+            "Volume": SelectedVolume,
+            "Time": SelectedTime,
+        }
+    )
+
+    return SelectedSignal, SelectedMass, SelectedSigma, SelectedVolume, SelectedTime, df
 
 
 READ_SHELF = fn.Shelf(
