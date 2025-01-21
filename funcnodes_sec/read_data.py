@@ -96,6 +96,7 @@ def read_sec_from_bytes(data: bytes) -> Tuple[dict, pd.DataFrame]:
         {"name": "time", "dtype": "np.ndarray"},
         {"name": "mass_f", "dtype": "np.ndarray"},
         {"name": "df"},
+        {"name": "metadata", "dtype": "pd.DataFrame"},
     ],
 )
 def retrieve_data(
@@ -183,6 +184,7 @@ def retrieve_data(
         SelectedTime,
         SelectedMassFraction,
         df,
+        metadata,
     )
 
 
