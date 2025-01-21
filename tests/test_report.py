@@ -1,7 +1,6 @@
 import os
 import unittest
 import funcnodes as fn
-import pandas as pd
 import funcnodes_sec as fnmodule
 from funcnodes_span.peaks import PeakProperties
 from funcnodes_span.peak_analysis import peak_finder
@@ -16,18 +15,8 @@ class TestSECReport(unittest.IsolatedAsyncioTestCase):
             self.bytes = f.read()
 
     async def test_report_sec(self):
-        node: fn.Node = fnmodule.read_data.read_sec_from_bytes()
-        node.inputs["data"].value = self.bytes
-        self.assertIsInstance(node, fn.Node)
-        await node
-        metadata = node.outputs["sec_metadata"].value
-        data = node.outputs["sec_data"].value
-        self.assertIsInstance(metadata, pd.DataFrame)
-        self.assertIsInstance(data, dict)
-
         sec: fn.Node = fnmodule.read_data.retrieve_data()
-        sec.inputs["data"].value = data
-        sec.inputs["metadata"].value = metadata
+        sec.inputs["sec_data"].value = self.bytes
         sec.inputs["molarmass_min"].value = 200
         sec.inputs["molarmass_max"].value = 1000000
         self.assertIsInstance(sec, fn.Node)
@@ -56,7 +45,7 @@ class TestSECReport(unittest.IsolatedAsyncioTestCase):
         sec_report.inputs["peaks"].value = main_peak
         self.assertIsInstance(sec_report, fn.Node)
         await sec_report
-        print(sec_report.outputs["sec_report"].value)
+        # print(sec_report.outputs["sec_report"].value)
 
         report = sec_report.outputs["sec_report"].value
         peaks_sec = sec_report.outputs["sec_peaks"].value[0]
