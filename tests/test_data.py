@@ -1,7 +1,8 @@
 import os
 import unittest
 import funcnodes as fn
-import pandas as pd
+
+# import pandas as pd
 import funcnodes_sec as fnmodule
 # from funcnodes_sec import read_data  # noqa
 # from fnmodule.data import sec_read_node
@@ -15,18 +16,8 @@ class TestSECData(unittest.IsolatedAsyncioTestCase):
             self.bytes = f.read()
 
     async def test_read_sec(self):
-        node: fn.Node = fnmodule.read_data.read_sec_from_bytes()
-        node.inputs["data"].value = self.bytes
-        self.assertIsInstance(node, fn.Node)
-        await node
-        metadata = node.outputs["sec_metadata"].value
-        data = node.outputs["sec_data"].value
-        self.assertIsInstance(metadata, pd.DataFrame)
-        self.assertIsInstance(data, dict)
-
         sec: fn.Node = fnmodule.read_data.retrieve_data()
-        sec.inputs["data"].value = data
-        sec.inputs["metadata"].value = metadata
+        sec.inputs["sec_data"].value = self.bytes
         sec.inputs["molarmass_min"].value = 200
         sec.inputs["molarmass_max"].value = 1000000
         self.assertIsInstance(sec, fn.Node)
