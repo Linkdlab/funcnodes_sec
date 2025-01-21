@@ -71,18 +71,6 @@ def extract_metadata(lines: list, clmLine: int) -> pd.DataFrame:
     return metadata_df
 
 
-@fn.NodeDecorator(
-    node_id="fnsec.data.readfrombytes",
-    name="SEC from Bytes",
-    inputs=[
-        {"name": "data", "dtype": "bytes"},
-    ],
-    description="Read the data from the SEC file",
-    outputs=[
-        {"name": "sec_data"},
-        {"name": "sec_metadata"},
-    ],
-)
 def read_sec_from_bytes(data: bytes) -> Tuple[dict, pd.DataFrame]:
     lines = read_file_lines(data)
     data_dict, clmLines = process_sec_file(lines)
@@ -92,29 +80,32 @@ def read_sec_from_bytes(data: bytes) -> Tuple[dict, pd.DataFrame]:
 
 
 @fn.NodeDecorator(
-    node_id="fnsec.data.retrieve",
-    name="SEC data retrieval",
+    node_id="fnsec.data.readfrombytes",
+    name="SEC from Bytes",
     inputs=[
-        {"name": "data", "dtype": "dict"},
-        {"name": "metadata", "dtype": "pd.DataFrame"},
+        {"name": "sec_data", "dtype": "bytes"},
         {"name": "molarmass_min", "dtype": "int"},
         {"name": "molarmass_max", "dtype": "int"},
     ],
-    description="Retrieve the SEC data",
+    description="Retrieve the SEC data from WinGPC system file.",
     outputs=[
         {"name": "signal", "dtype": "np.ndarray"},
         {"name": "mass", "dtype": "np.ndarray"},
         {"name": "sigma", "dtype": "np.ndarray"},
         {"name": "volume", "dtype": "np.ndarray"},
         {"name": "time", "dtype": "np.ndarray"},
+        {"name": "mass_f", "dtype": "np.ndarray"},
         {"name": "df"},
     ],
 )
 def retrieve_data(
-    data: dict, metadata: pd.DataFrame, molarmass_min: int, molarmass_max: int
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.DataFrame]:
+    sec_data: bytes, molarmass_min: int, molarmass_max: int
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.DataFrame
+]:
     # fitting_degree = int(metadata["Fit"][0].strip().split(" ")[-1])
     # fitting = metadata["Fit"][0].strip().split(" ")[0]
+    data, metadata = read_sec_from_bytes(sec_data)
     const = float(metadata["Const."][0].strip())
     coef2 = float(metadata["Coef.2"][0].strip())
     coef3 = float(metadata["Coef.3"][0].strip())
@@ -158,6 +149,10 @@ def retrieve_data(
     masses = 10 ** f.func(
         x=volume, c0=const, c1=coef2, c2=coef3, c3=coef4, c4=coef5, c5=coef6, c6=coef7
     )
+    Signal_norm_0_to_1 = (rawSignal - np.amin(rawSignal)) / (
+        np.amax(rawSignal) - np.amin(rawSignal)
+    )
+    mass_f = Signal_norm_0_to_1 / (masses * sigma)
 
     minIndex = np.abs(masses - molarmass_max).argmin()
     maxIndex = np.abs(masses - molarmass_min).argmin()
@@ -167,6 +162,7 @@ def retrieve_data(
     SelectedSigma = sigma[minIndex:maxIndex]
     SelectedVolume = volume[minIndex:maxIndex]
     SelectedTime = measurement_time[minIndex:maxIndex]
+    SelectedMassFraction = mass_f[minIndex:maxIndex]
 
     df = pd.DataFrame(
         {
@@ -175,15 +171,23 @@ def retrieve_data(
             "Sigma": SelectedSigma,
             "Volume": SelectedVolume,
             "Time": SelectedTime,
+            "Mass_f": SelectedMassFraction,
         }
     )
 
-    return SelectedSignal, SelectedMass, SelectedSigma, SelectedVolume, SelectedTime, df
+    return (
+        SelectedSignal,
+        SelectedMass,
+        SelectedSigma,
+        SelectedVolume,
+        SelectedTime,
+        SelectedMassFraction,
+        df,
+    )
 
 
 READ_SHELF = fn.Shelf(
     nodes=[
-        read_sec_from_bytes,
         retrieve_data,
     ],
     subshelves=[],
