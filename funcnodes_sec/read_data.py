@@ -102,7 +102,14 @@ def read_sec_from_bytes(data: bytes) -> Tuple[dict, pd.DataFrame]:
 def retrieve_data(
     sec_data: bytes, molarmass_min: int, molarmass_max: int
 ) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.DataFrame
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    pd.DataFrame,
+    pd.DataFrame,
 ]:
     # fitting_degree = int(metadata["Fit"][0].strip().split(" ")[-1])
     # fitting = metadata["Fit"][0].strip().split(" ")[0]
