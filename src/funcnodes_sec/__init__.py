@@ -4,7 +4,7 @@ from funcnodes_span import NODE_SHELF as SPAN_SHELF
 from .report import REPORT_SHELF
 from .read_data import READ_SHELF
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 
 
 NODE_SHELF = fn.Shelf(
