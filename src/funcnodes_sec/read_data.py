@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import numpy as np
 import pandas as pd
 import funcnodes as fn
@@ -83,24 +83,38 @@ def read_sec_from_bytes(data: bytes) -> Tuple[dict, pd.DataFrame]:
     node_id="fnsec.data.readfrombytes",
     name="SEC from Bytes",
     inputs=[
-        {"name": "sec_data", "dtype": "bytes"},
-        {"name": "molarmass_min", "dtype": "int"},
-        {"name": "molarmass_max", "dtype": "int"},
+        {"name": "sec_data"},
+        {"name": "molarmass_min"},
+        {"name": "molarmass_max"},
     ],
     description="Retrieve the SEC data from WinGPC system file.",
     outputs=[
-        {"name": "signal", "dtype": "np.ndarray"},
-        {"name": "mass", "dtype": "np.ndarray"},
-        {"name": "sigma", "dtype": "np.ndarray"},
-        {"name": "volume", "dtype": "np.ndarray"},
-        {"name": "time", "dtype": "np.ndarray"},
-        {"name": "mass_f", "dtype": "np.ndarray"},
+        {
+            "name": "signal",
+        },
+        {
+            "name": "mass",
+        },
+        {
+            "name": "sigma",
+        },
+        {
+            "name": "volume",
+        },
+        {
+            "name": "time",
+        },
+        {
+            "name": "mass_f",
+        },
         {"name": "df"},
-        {"name": "metadata", "dtype": "pd.DataFrame"},
+        {"name": "metadata"},
     ],
 )
 def retrieve_data(
-    sec_data: bytes, molarmass_min: int, molarmass_max: int
+    sec_data: bytes,
+    molarmass_min: Optional[int] = None,
+    molarmass_max: Optional[int] = None,
 ) -> Tuple[
     np.ndarray,
     np.ndarray,
@@ -161,6 +175,16 @@ def retrieve_data(
         np.amax(rawSignal) - np.amin(rawSignal)
     )
     mass_f = Signal_norm_0_to_1 / (masses * sigma)
+
+    if molarmass_max is None:
+        molarmass_max = masses.max()
+    if molarmass_min is None:
+        molarmass_min = max(1, masses.min())
+
+    if molarmass_max < molarmass_min:
+        raise ValueError(
+            "Molar mass max should be greater than molar mass min. Please check the values."
+        )
 
     minIndex = np.abs(masses - molarmass_max).argmin()
     maxIndex = np.abs(masses - molarmass_min).argmin()

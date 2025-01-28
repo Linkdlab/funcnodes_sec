@@ -1,15 +1,11 @@
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [project]
 authors = [{name="Kourosh Rezaei", email="kourosh.rezaei@linkdlab.de"} ]
 name = "funcnodes-sec"
-version = "0.1.6"
+version = "0.1.7"
 description = ""
 readme = "README.md"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
 ]
 requires-python = ">=3.11"
@@ -17,10 +13,11 @@ dependencies = [
     "funcnodes",
     "funcnodes-span",
     "funcnodes-pandas",
+    "pip>=24.2",
 ]
 
 [project.license]
-text = "MIT"
+text = "AGPL-3.0"
 
 [project.urls]
 homepage = "https://github.com/Linkdlab/funcnodes_sec"
@@ -28,29 +25,26 @@ source = "https://github.com/Linkdlab/funcnodes_sec"
 tracker = "https://github.com/Linkdlab/funcnodes_sec/issues"
 download = "https://pypi.org/project/funcnodes-sec/#files"
 
-[project.plugins]
-
-[project.dependency-groups]
-dev = ["pytest", "pre-commit", "funcnodes-module>=0.1.22"]
 
 [tool.setuptools.package-dir]
 "" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [project.entry-points."funcnodes.module"]
 module = "funcnodes_sec"
 shelf = "funcnodes_sec:NODE_SHELF"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
 [dependency-groups]
 dev = [
+    "funcnodes>=0.5.12",
     "funcnodes-module>=0.2.5",
     "pre-commit>=4.1.0",
     "pytest>=8.3.4",
+    "uv>=0.5.23",
 ]
 
-[project.group.dev.dependencies]
-pytest = "*"
-pre-commit = "*"
-funcnodes-module = "^0.1.22"
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"

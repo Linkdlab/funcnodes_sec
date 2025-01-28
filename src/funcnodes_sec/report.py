@@ -14,22 +14,31 @@ def molar_mass_value_round(val):
         return round(val, -3)
 
 
-def molarMass_summation_series(Mass, Signal, Sigma):
+def molarMass_summation_series(Mass, Signal, Sigma) -> Tuple[float, float, np.ndarray]:
     Signal_norm_0_to_1 = (Signal - np.amin(Signal)) / (
         np.amax(Signal) - np.amin(Signal)
     )
 
     Wm = Signal_norm_0_to_1 / (Mass * Sigma)
 
-    Mn = np.trapz(Wm, Mass) / np.trapz(Wm / Mass, Mass)
-    Mw = np.trapz(Wm * Mass, Mass) / np.trapz(Wm, Mass)
-    return Mn, Mw
+    Mn = np.trapezoid(Wm, Mass) / np.trapezoid(Wm / Mass, Mass)
+    Mw = np.trapezoid(Wm * Mass, Mass) / np.trapezoid(Wm, Mass)
+    return Mn, Mw, Wm
 
 
 def sec_peak_analysis(
-    signal: np.ndarray, mass: np.ndarray, sigma: np.ndarray, peaks: List[PeakProperties]
-) -> Tuple[pd.DataFrame, List[PeakProperties]]:
+    peaks: List[PeakProperties],
+    mass: np.ndarray,
+    sigma: np.ndarray,
+) -> Tuple[pd.DataFrame, List[PeakProperties], pd.DataFrame]:
     output_peaks = []
+
+    mwd = pd.DataFrame(
+        {
+            "logM": np.log10(mass),
+        }
+    )
+
     if peaks:
         for peak in peaks:
             output_peak = {}
@@ -43,37 +52,42 @@ def sec_peak_analysis(
 
             peak_left = peak.i_index
             peak_right = peak.f_index
-            SelectedPeakMass = mass[peak_left:peak_right]
-            SelectedPeakSignal = signal[peak_left:peak_right]
-            SelectedPeakSigma = sigma[peak_left:peak_right]
-            mn, mw = molarMass_summation_series(
+            SelectedPeakMass = mass[peak_left : peak_right + 1]
+            SelectedPeakSignal = peak.yrange
+            SelectedPeakSigma = sigma[peak_left : peak_right + 1]
+            mn, mw, Wm = molarMass_summation_series(
                 SelectedPeakMass, SelectedPeakSignal, SelectedPeakSigma
             )
             peak.add_serializable_property("Mn (g/mol)", molar_mass_value_round(mn))
             peak.add_serializable_property("Mw (g/mol)", molar_mass_value_round(mw))
             peak.add_serializable_property("D", round(mw / mn, 2))
+            mwd[peak.id] = np.nan
+
+            mwd.loc[peak_left:peak_right, peak.id] = Wm
+
             output_peak["Mn (g/mol)"] = peak._serdata["Mn (g/mol)"]
             output_peak["Mw (g/mol)"] = peak._serdata["Mw (g/mol)"]
             output_peak["D"] = peak._serdata["D"]
             output_peaks.append(output_peak)
-    return pd.DataFrame(output_peaks), peaks
+    return pd.DataFrame(output_peaks), peaks, mwd
 
 
 sec_report_node = fn.NodeDecorator(
     node_id="fnsec.report.sec_report",
     name="sec Report",
     inputs=[
-        {"name": "signal", "dtype": "np.ndarray"},
-        {"name": "mass", "dtype": "np.ndarray"},
-        {"name": "sigma", "dtype": "np.ndarray"},
-        {"name": "peaks", "dtype": "List[PeakProperties]"},
+        {"name": "mass"},
+        {"name": "sigma"},
+        {"name": "peaks"},
     ],
     description="Calculates sec report data from peaks and sec data.",
     outputs=[
-        {"name": "sec_report", "dtype": "pd.DataFrame"},
-        {"name": "sec_peaks", "dtype": "List[PeakProperties]"},
+        {"name": "sec_report"},
+        {"name": "sec_peaks"},
+        {"name": "MWD"},
     ],
 )(sec_peak_analysis)
+
 REPORT_SHELF = fn.Shelf(
     nodes=[
         sec_report_node,

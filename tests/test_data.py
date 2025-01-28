@@ -10,9 +10,7 @@ import funcnodes_sec as fnmodule
 
 class TestSECData(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        with open(
-            os.path.join(os.path.dirname(__file__), "010_TKH_Ac(e)DexLibrary_SEC"), "rb"
-        ) as f:
+        with open(os.path.join(os.path.dirname(__file__), "win_gpc_sample"), "rb") as f:
             self.bytes = f.read()
 
     async def test_read_sec(self):

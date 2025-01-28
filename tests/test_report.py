@@ -9,9 +9,7 @@ from funcnodes_span.peak_analysis import peak_finder
 
 class TestSECReport(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        with open(
-            os.path.join(os.path.dirname(__file__), "010_TKH_Ac(e)DexLibrary_SEC"), "rb"
-        ) as f:
+        with open(os.path.join(os.path.dirname(__file__), "win_gpc_sample"), "rb") as f:
             self.bytes = f.read()
 
     async def test_report_sec(self):
@@ -21,16 +19,15 @@ class TestSECReport(unittest.IsolatedAsyncioTestCase):
         sec.inputs["molarmass_max"].value = 1000000
         self.assertIsInstance(sec, fn.Node)
         await sec
-        signal = sec.outputs["signal"].value
-        volume = sec.outputs["volume"].value
-        mass = sec.outputs["mass"].value
-        sigma = sec.outputs["sigma"].value
+        # volume = sec.outputs["volume"].value
+        # mass = sec.outputs["mass"].value
+        # sigma = sec.outputs["sigma"].value
 
-        self.assertEqual(len(signal), 663)
+        self.assertEqual(len(sec.outputs["signal"].value), 663)
 
         peaks: fn.Node = peak_finder()
-        peaks.inputs["y"].value = signal
-        peaks.inputs["x"].value = volume
+        peaks.inputs["y"].connect(sec.outputs["signal"])
+        peaks.inputs["x"].connect(sec.outputs["volume"])
         peaks.inputs["height"].value = 0.0299
         self.assertIsInstance(peaks, fn.Node)
         await peaks
@@ -39,10 +36,9 @@ class TestSECReport(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(main_peak[0], PeakProperties)
 
         sec_report: fn.Node = fnmodule.report.sec_report_node()
-        sec_report.inputs["signal"].value = signal
-        sec_report.inputs["mass"].value = mass
-        sec_report.inputs["sigma"].value = sigma
-        sec_report.inputs["peaks"].value = main_peak
+        sec_report.inputs["mass"].connect(sec.outputs["mass"])
+        sec_report.inputs["sigma"].connect(sec.outputs["sigma"])
+        sec_report.inputs["peaks"].connect(peaks.outputs["peaks"])
         self.assertIsInstance(sec_report, fn.Node)
         await sec_report
         # print(sec_report.outputs["sec_report"].value)
